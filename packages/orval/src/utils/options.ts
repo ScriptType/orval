@@ -783,9 +783,6 @@ function normalizeQueryOptions(
     ...(queryOptions.mutationInvalidates
       ? { mutationInvalidates: queryOptions.mutationInvalidates }
       : {}),
-    ...(queryOptions.optimisticUpdates
-      ? { optimisticUpdates: queryOptions.optimisticUpdates }
-      : {}),
   };
 }
 
