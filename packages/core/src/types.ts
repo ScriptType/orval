@@ -564,6 +564,35 @@ export type NormalizedZodOptions = {
   timeOptions: ZodTimeOptions;
 };
 
+/**
+ * Config for auto-invalidating queries after mutations succeed.
+ * Maps mutation operation names to query operation names to invalidate.
+ */
+export type MutationInvalidatesConfig = Record<
+  string,
+  | string[]
+  | {
+      invalidates: string[];
+    }
+>;
+
+/**
+ * Config for optimistic updates - manipulating cache before mutation completes.
+ * Uses discriminated union to require `matchBy` for upsert/remove strategies.
+ */
+export type OptimisticUpdatesConfig = Record<
+  string,
+  | {
+      target: string;
+      strategy: 'append' | 'prepend';
+    }
+  | {
+      target: string;
+      strategy: 'upsert' | 'remove';
+      matchBy: string;
+    }
+>;
+
 export type HonoOptions = {
   handlers?: string;
   compositeRoute?: string;
@@ -591,6 +620,8 @@ export type NormalizedQueryOptions = {
   useOperationIdAsQueryKey?: boolean;
   signal?: boolean;
   version?: 3 | 4 | 5;
+  mutationInvalidates?: MutationInvalidatesConfig;
+  optimisticUpdates?: OptimisticUpdatesConfig;
 };
 
 export type QueryOptions = {
@@ -613,6 +644,8 @@ export type QueryOptions = {
   useOperationIdAsQueryKey?: boolean;
   signal?: boolean;
   version?: 3 | 4 | 5;
+  mutationInvalidates?: MutationInvalidatesConfig;
+  optimisticUpdates?: OptimisticUpdatesConfig;
 };
 
 export type AngularOptions = {
