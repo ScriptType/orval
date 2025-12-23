@@ -576,23 +576,6 @@ export type MutationInvalidatesConfig = Record<
     }
 >;
 
-/**
- * Config for optimistic updates - manipulating cache before mutation completes.
- * Uses discriminated union to require `matchBy` for upsert/remove strategies.
- */
-export type OptimisticUpdatesConfig = Record<
-  string,
-  | {
-      target: string;
-      strategy: 'append' | 'prepend';
-    }
-  | {
-      target: string;
-      strategy: 'upsert' | 'remove';
-      matchBy: string;
-    }
->;
-
 export type HonoOptions = {
   handlers?: string;
   compositeRoute?: string;
