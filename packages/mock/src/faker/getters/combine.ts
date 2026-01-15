@@ -72,12 +72,18 @@ export function combineSchemasMock({
 
   const value = (item[separator] ?? []).reduce(
     (acc, val, _, arr) => {
-      if (
-        '$ref' in val &&
-        existingReferencedProperties.includes(
-          pascal(val.$ref.split('/').pop() ?? ''),
-        )
-      ) {
+      const refName =
+        '$ref' in val ? pascal(val.$ref.split('/').pop() ?? '') : '';
+      // For allOf: skip if refName is in existingRefs AND this is an inline schema (not a top-level ref)
+      // This allows top-level schemas (item.isRef=true) to get base properties from allOf
+      // while preventing circular allOf chains in inline property schemas
+      const shouldSkipRef =
+        separator === 'allOf'
+          ? refName &&
+            (refName === item.name ||
+              (existingReferencedProperties.includes(refName) && !item.isRef))
+          : refName && existingReferencedProperties.includes(refName);
+      if (shouldSkipRef) {
         if (arr.length === 1) {
           return 'undefined';
         }
