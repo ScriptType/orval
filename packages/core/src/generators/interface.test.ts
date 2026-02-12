@@ -1,51 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import type {
-  ContextSpec,
-  GeneratorSchema,
-  OpenApiSchemaObject,
-} from '../types';
+import type { GeneratorSchema, NonBooleanSchemaObject } from '../types';
 import { EnumGeneration, NamingConvention } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { generateImports } from './imports';
 import { generateInterface } from './interface';
 
 describe('generateInterface', () => {
-  const context = {
-    output: {
-      override: { namingConvention: {} },
-    },
-    target: 'typescript',
-    spec: {},
-  } as unknown as ContextSpec;
+  const context = createContextSpec();
 
-  const withContext = ({
-    output,
-    override,
-  }: {
-    output?: Partial<ContextSpec['output']>;
-    override?: Partial<ContextSpec['output']['override']>;
-  } = {}): ContextSpec => ({
-    ...context,
-    output: {
-      ...context.output,
-      ...output,
-      override: {
-        ...context.output.override,
-        ...override,
-      },
-    },
+  const constEnumGenerationContext = createContextSpec({
+    output: { override: { enumGenerationType: EnumGeneration.CONST } },
   });
 
-  const constEnumGenerationContext = withContext({
-    override: { enumGenerationType: EnumGeneration.CONST },
-  });
-
-  const aliasCombinedTypesContext = withContext({
-    override: { aliasCombinedTypes: true },
+  const aliasCombinedTypesContext = createContextSpec({
+    output: { override: { aliasCombinedTypes: true } },
   });
 
   it('should return const object with typeof', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         message: {
@@ -67,7 +40,7 @@ describe('generateInterface', () => {
     const got = generateInterface({
       name: 'TestSchema',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -89,7 +62,7 @@ export type TestSchema = typeof TestSchemaValue;
 
   // With enumGenerationType: const - mimic default enum output
   it('should inline const literal when enum + const are both present', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         kind: {
@@ -104,7 +77,7 @@ export type TestSchema = typeof TestSchemaValue;
     const got = generateInterface({
       name: 'ConstEnum',
       context: constEnumGenerationContext,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -132,7 +105,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
   // With enumGenerationType: const - keep referenced enums type-only
   it('should use type-only imports for referenced schemas in interfaces', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         status: {
@@ -144,7 +117,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'Order',
       context: constEnumGenerationContext,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
 
     expect(got).toEqual([
@@ -170,7 +143,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
   // With enumGenerationType: const - keep inline enums type-only in interfaces
   it('should use type-only imports for inline enums in interfaces even with const enum generation', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         status: {
@@ -183,7 +156,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'OrderWithInlineEnum',
       context: constEnumGenerationContext,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
 
     expect(got).toEqual([
@@ -228,7 +201,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should return type', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {},
       required: ['message', 'code'],
@@ -237,7 +210,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'TestSchema',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -252,7 +225,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should generate index signature with propertyNames enum (OpenAPI 3.1)', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -266,7 +239,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'MyObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -281,7 +254,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with additional properties as boolean', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -293,7 +266,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'MyObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -308,7 +281,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with specific type in additionalProperties', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -322,7 +295,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'MyObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -337,7 +310,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should use string when propertyNames has no enum', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -351,7 +324,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'MyObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     const want: GeneratorSchema[] = [
       {
@@ -366,7 +339,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with properties already defined', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         existingProp: {
@@ -386,7 +359,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const got = generateInterface({
       name: 'MyObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
 
     expect(got).toHaveLength(1);
@@ -404,7 +377,7 @@ export type ConstEnum = typeof ConstEnumValue;
   ] as const)(
     'should generate %s primitive properties: type alias when aliasCombinedTypes is true, inlined by default',
     (combiner, operator, combinerName) => {
-      const schema: OpenApiSchemaObject = {
+      const schema: NonBooleanSchemaObject = {
         type: 'object',
         properties: {
           field: {
@@ -417,7 +390,7 @@ export type ConstEnum = typeof ConstEnumValue;
       const aliasResult = generateInterface({
         name: `Alias${combinerName}`,
         context: aliasCombinedTypesContext,
-        schema: schema as unknown as OpenApiSchemaObject,
+        schema,
       });
       expect(aliasResult).toHaveLength(2);
       expect(aliasResult[0].name).toBe(`Alias${combinerName}Field`);
@@ -433,7 +406,7 @@ export type ConstEnum = typeof ConstEnumValue;
       const inlineResult = generateInterface({
         name: `Inline${combinerName}`,
         context,
-        schema: schema as unknown as OpenApiSchemaObject,
+        schema,
       });
       expect(inlineResult).toHaveLength(1);
       expect(inlineResult[0].name).toBe(`Inline${combinerName}`);
@@ -444,7 +417,7 @@ export type ConstEnum = typeof ConstEnumValue;
   );
 
   it('should generate object properties: intermediate types when aliasCombinedTypes is true, inlined by default', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       type: 'object',
       properties: {
         field: {
@@ -460,7 +433,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const aliasResult = generateInterface({
       name: 'AliasObject',
       context: aliasCombinedTypesContext,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     expect(aliasResult).toHaveLength(4);
     expect(aliasResult[0].name).toBe('AliasObjectFieldOneOf');
@@ -484,7 +457,7 @@ export type ConstEnum = typeof ConstEnumValue;
     const inlineResult = generateInterface({
       name: 'InlineObject',
       context,
-      schema: schema as unknown as OpenApiSchemaObject,
+      schema,
     });
     expect(inlineResult).toHaveLength(2);
     expect(inlineResult[0].name).toBe('InlineObjectField');
@@ -500,7 +473,7 @@ export type ConstEnum = typeof ConstEnumValue;
   // Comprehensive test: (a|b) & c & (d|e) & (f|g)
   // Tests: nested oneOf, nested anyOf, sibling oneOf, different positions
   it('allOf + union precedence: should wrap all unions in parens', () => {
-    const schema: OpenApiSchemaObject = {
+    const schema: NonBooleanSchemaObject = {
       allOf: [
         {
           oneOf: [
@@ -530,9 +503,9 @@ export type ConstEnum = typeof ConstEnumValue;
 
   describe('duplicate union types', () => {
     it('should not produce duplicate null in nullable object types', () => {
-      const schema = {
+      const schema: NonBooleanSchemaObject = {
         type: ['object', 'null'],
-      } as unknown as OpenApiSchemaObject;
+      };
 
       const result = generateInterface({
         name: 'NullableObject',
@@ -544,7 +517,7 @@ export type ConstEnum = typeof ConstEnumValue;
     });
 
     it('should not produce duplicate types in oneOf/anyOf', () => {
-      const schema: OpenApiSchemaObject = {
+      const schema: NonBooleanSchemaObject = {
         oneOf: [{ type: 'string' }, { type: 'string' }, { type: 'number' }],
       };
 
