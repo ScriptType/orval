@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ContextSpec, OpenApiSchemaObject } from '../types';
+import type { OpenApiSchemaObject } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { combineSchemas } from './combine';
 
 const petSchema: OpenApiSchemaObject = {
@@ -13,21 +14,8 @@ const petSchema: OpenApiSchemaObject = {
   },
 };
 
-const context: ContextSpec = {
-  output: {
-    override: {
-      enumGenerationType: 'const',
-      components: {
-        schemas: { suffix: '', itemSuffix: 'Item' },
-        responses: { suffix: '' },
-        parameters: { suffix: '' },
-        requestBodies: { suffix: 'RequestBody' },
-      },
-    },
-    unionAddMissingProperties: false,
-  },
+const context = createContextSpec({
   target: 'spec',
-  workspace: '',
   spec: {
     components: {
       schemas: {
@@ -41,7 +29,16 @@ const context: ContextSpec = {
       },
     },
   },
-} as unknown as ContextSpec;
+  output: {
+    override: {
+      enumGenerationType: 'const',
+      components: {
+        schemas: { itemSuffix: 'Item' },
+        requestBodies: { suffix: 'RequestBody' },
+      },
+    },
+  },
+});
 
 describe('combineSchemas (allOf required handling)', () => {
   it('does not add Required<Pick> when required properties are defined on parent', () => {

@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ContextSpec, OpenApiParameterObject } from '../types';
+import type { OpenApiParameterObject } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { getQueryParams } from './query-params';
 
 // Mock context for getQueryParams
-const context: ContextSpec = {
-  spec: {},
+const context = createContextSpec({
   output: {
-    // @ts-expect-error -- partial mock: only override.useDates needed for test
     override: {
       useDates: true,
     },
   },
-};
+});
 
 const queryParams: {
   parameter: OpenApiParameterObject;

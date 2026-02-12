@@ -6,6 +6,7 @@ import type {
   OpenApiResponseObject,
   OpenApiSchemaObject,
 } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { isString } from '../utils';
 import { isBinaryContentType } from '../utils/content-type';
 import { getResReqTypes } from './res-req-types';
@@ -21,26 +22,22 @@ const schemaWithReadOnly: OpenApiSchemaObject = {
   required: ['file'],
 };
 
-const context = {
+const context = createContextSpec({
+  target: 'spec',
+  spec: {
+    components: { schemas: {} },
+  },
   output: {
     override: {
       formData: { arrayHandling: 'serialize', disabled: false },
       enumGenerationType: 'const',
-      namingConvention: {},
       components: {
-        schemas: { suffix: '', itemSuffix: 'Item' },
-        responses: { suffix: '' },
-        parameters: { suffix: '' },
+        schemas: { itemSuffix: 'Item' },
         requestBodies: { suffix: 'RequestBody' },
       },
     },
   },
-  target: 'spec',
-  workspace: '',
-  spec: {
-    components: { schemas: {} },
-  },
-} as unknown as ContextSpec;
+});
 
 describe('getResReqTypes (formData, readOnly property)', () => {
   it('should not include readOnly properties in the generated formData', () => {

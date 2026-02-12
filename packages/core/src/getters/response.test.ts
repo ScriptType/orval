@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ContextSpec, OpenApiResponsesObject } from '../types';
+import type { OpenApiResponsesObject } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { getResponse } from './response';
 
-const context = {
+const context = createContextSpec({
+  target: 'spec',
+  spec: {
+    components: { schemas: {} },
+  },
   output: {
     override: {
       formData: { arrayHandling: 'serialize', disabled: false },
       enumGenerationType: 'const',
     },
   },
-  target: 'spec',
-  workspace: '',
-  spec: {
-    components: { schemas: {} },
-  },
-} as unknown as ContextSpec;
+});
 
 describe('getResponse', () => {
   describe('multiple status codes with same schema', () => {
