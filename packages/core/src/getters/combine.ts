@@ -6,6 +6,7 @@ import {
   EnumGeneration,
   type GeneratorImport,
   type GeneratorSchema,
+  type NonBooleanSchemaObject,
   type OpenApiReferenceObject,
   type OpenApiSchemaObject,
   type ScalarValue,
@@ -20,7 +21,7 @@ import { getScalar } from './scalar';
 type CombinedData = {
   imports: GeneratorImport[];
   schemas: GeneratorSchema[];
-  originalSchema: (OpenApiSchemaObject | undefined)[];
+  originalSchema: (NonBooleanSchemaObject | undefined)[];
   values: string[];
   isRef: boolean[];
   isEnum: boolean[];
@@ -40,7 +41,7 @@ type CombinedData = {
 type Separator = 'allOf' | 'anyOf' | 'oneOf';
 const mergeableAllOfKeys = new Set(['type', 'properties', 'required']);
 
-function isMergeableAllOfObject(schema: OpenApiSchemaObject): boolean {
+function isMergeableAllOfObject(schema: NonBooleanSchemaObject): boolean {
   // Must have properties to be worth merging
   if (isNullish(schema.properties)) {
     return false;
@@ -61,8 +62,8 @@ function isMergeableAllOfObject(schema: OpenApiSchemaObject): boolean {
 }
 
 function normalizeAllOfSchema(
-  schema: OpenApiSchemaObject,
-): OpenApiSchemaObject {
+  schema: NonBooleanSchemaObject,
+): NonBooleanSchemaObject {
   // Bridge assertions: AnyOtherAttribute infects all schema property access
   const schemaAllOf = schema.allOf as
     | (OpenApiSchemaObject | OpenApiReferenceObject)[]
@@ -112,7 +113,7 @@ function normalizeAllOfSchema(
     }),
     ...(mergedRequired.size > 0 && { required: [...mergedRequired] }),
     ...(remainingAllOf.length > 0 && { allOf: remainingAllOf }),
-  } as OpenApiSchemaObject;
+  } as NonBooleanSchemaObject;
 }
 
 interface CombineValuesOptions {
@@ -120,7 +121,7 @@ interface CombineValuesOptions {
   resolvedValue?: ScalarValue;
   separator: Separator;
   context: ContextSpec;
-  parentSchema?: OpenApiSchemaObject;
+  parentSchema?: NonBooleanSchemaObject;
 }
 
 function combineValues({
@@ -155,7 +156,7 @@ function combineValues({
           const disc = s?.discriminator as Discriminator | undefined;
           return disc && resolvedValue.value.includes(` ${disc.propertyName}:`);
         },
-      ) as OpenApiSchemaObject[];
+      ) as NonBooleanSchemaObject[];
       if (discriminatedPropertySchemas.length > 0) {
         resolvedDataValue = `Omit<${resolvedDataValue}, '${discriminatedPropertySchemas.map((s) => (s.discriminator as Discriminator | undefined)?.propertyName).join("' | '")}'>`;
       }
@@ -239,7 +240,7 @@ export function combineSchemas({
   formDataContext,
 }: {
   name?: string;
-  schema: OpenApiSchemaObject;
+  schema: NonBooleanSchemaObject;
   separator: Separator;
   context: ContextSpec;
   nullable: string;
@@ -412,7 +413,7 @@ export function combineSchemas({
     resolvedValue = getScalar({
       item: Object.fromEntries(
         Object.entries(normalizedSchema).filter(([key]) => key !== separator),
-      ),
+      ) as NonBooleanSchemaObject,
       name,
       context,
       formDataContext,
@@ -425,7 +426,7 @@ export function combineSchemas({
       | (OpenApiSchemaObject | OpenApiReferenceObject)[]
       | undefined;
     resolvedValue = combineSchemas({
-      schema: { [siblingCombiner]: siblingSchemas },
+      schema: { [siblingCombiner]: siblingSchemas } as NonBooleanSchemaObject,
       name,
       separator: siblingCombiner,
       context,

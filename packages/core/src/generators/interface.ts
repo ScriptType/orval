@@ -1,6 +1,7 @@
 import { getScalar } from '../getters';
 import type {
   ContextSpec,
+  NonBooleanSchemaObject,
   OpenApiReferenceObject,
   OpenApiSchemaObject,
 } from '../types';
@@ -8,7 +9,7 @@ import { jsDoc } from '../utils';
 
 interface GenerateInterfaceOptions {
   name: string;
-  schema: OpenApiSchemaObject;
+  schema: NonBooleanSchemaObject;
   context: ContextSpec;
 }
 
