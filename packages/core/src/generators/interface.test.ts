@@ -10,13 +10,13 @@ import { generateImports } from './imports';
 import { generateInterface } from './interface';
 
 describe('generateInterface', () => {
-  const context: ContextSpec = {
+  const context = {
     output: {
       override: { namingConvention: {} },
     },
     target: 'typescript',
     spec: {},
-  };
+  } as unknown as ContextSpec;
 
   const withContext = ({
     output,
@@ -159,6 +159,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
     const importsString = generateImports({
       imports: got[0].imports,
+      target: 'typescript',
       namingConvention: NamingConvention.CAMEL_CASE,
     });
 
@@ -205,6 +206,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
     const importsString = generateImports({
       imports: got[1].imports,
+      target: 'typescript',
       namingConvention: NamingConvention.CAMEL_CASE,
     });
 
@@ -216,6 +218,7 @@ export type ConstEnum = typeof ConstEnumValue;
   it('should emit value imports when a symbol is marked constant (value space)', () => {
     const importsString = generateImports({
       imports: [{ name: 'OrderWithInlineEnumStatus', isConstant: true }],
+      target: 'typescript',
       namingConvention: NamingConvention.CAMEL_CASE,
     });
 
