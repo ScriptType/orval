@@ -3,7 +3,7 @@ import { isArray } from 'remeda';
 import { resolveExampleRefs } from '../resolvers';
 import type {
   ContextSpec,
-  OpenApiSchemaObject,
+  NonBooleanSchemaObject,
   OpenApiSchemaObjectType,
   ScalarValue,
 } from '../types';
@@ -18,7 +18,7 @@ import { getObject } from './object';
 type SchemaEnumValue = string | number | boolean | null;
 
 interface GetScalarOptions {
-  item: OpenApiSchemaObject;
+  item: NonBooleanSchemaObject;
   name?: string;
   context: ContextSpec;
   formDataContext?: FormDataContext;
@@ -218,9 +218,9 @@ export function getScalar({
       if (isArray(itemType)) {
         const anyOfVariants = itemType.map((type) =>
           Object.assign({}, item, { type }),
-        ) as OpenApiSchemaObject[];
+        ) as NonBooleanSchemaObject[];
         return combineSchemas({
-          schema: { anyOf: anyOfVariants } as OpenApiSchemaObject,
+          schema: { anyOf: anyOfVariants } as NonBooleanSchemaObject,
           name,
           separator: 'anyOf',
           context,
