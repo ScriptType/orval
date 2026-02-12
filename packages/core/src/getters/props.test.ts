@@ -1,22 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  ContextSpec,
   GetterQueryParam,
   OpenApiReferenceObject,
   OpenApiRequestBodyObject,
 } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { getProps } from './props';
 
 describe('getProps', () => {
   it('should make props required when optionsParamRequired is true', () => {
-    const context: ContextSpec = {
+    const context = createContextSpec({
       output: {
         optionsParamRequired: true,
         allParamsOptional: true,
-        override: {},
       },
-    } as ContextSpec;
+    });
 
     const queryParams: GetterQueryParam = {
       schema: {
@@ -48,13 +47,12 @@ describe('getProps', () => {
     expect(props[0].required).toBe(true);
   });
   it('should use raw param type for query params definition when client is angular', () => {
-    const context: ContextSpec = {
+    const context = createContextSpec({
       output: {
         client: 'angular',
         allParamsOptional: false,
-        override: {},
       },
-    } as ContextSpec;
+    });
 
     const queryParams: GetterQueryParam = {
       schema: {

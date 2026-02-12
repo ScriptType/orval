@@ -1,31 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ContextSpec, GeneratorImport, ResolverValue } from '../types';
+import type { GeneratorImport, ResolverValue } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import {
   getAliasedImports,
   getImportAliasForRefOrValue,
   needCreateImportAlias,
 } from './imports';
 
-const baseContext: Omit<ContextSpec, 'output'> = {
+const contextWithSchemas = createContextSpec({
   target: 'spec',
-  workspace: '',
-  spec: {},
-};
+  output: { schemas: '/schemas' },
+});
 
-const contextWithSchemas = {
-  ...baseContext,
-  output: {
-    schemas: '/schemas',
-  },
-} as ContextSpec;
-
-const contextWithoutSchemas = {
-  ...baseContext,
-  output: {
-    schemas: undefined,
-  },
-} as ContextSpec;
+const contextWithoutSchemas = createContextSpec({
+  target: 'spec',
+  output: { schemas: undefined },
+});
 
 const baseResolvedValue: ResolverValue = {
   isRef: false,

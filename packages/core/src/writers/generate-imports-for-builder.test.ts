@@ -2,18 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import type { GeneratorImport, NormalizedOutputOptions } from '../types';
 import { NamingConvention } from '../types';
+import { createNormalizedOutputOptions } from '../__tests__/test-factories';
 import { generateImportsForBuilder } from './generate-imports-for-builder';
 
 describe('generateImportsForBuilder', () => {
   const createMockOutput = (
     overrides: Partial<NormalizedOutputOptions> = {},
-  ): NormalizedOutputOptions =>
-    ({
-      namingConvention: NamingConvention.CAMEL_CASE,
-      indexFiles: false,
-      fileExtension: '.ts',
-      ...overrides,
-    }) as NormalizedOutputOptions;
+  ): NormalizedOutputOptions => createNormalizedOutputOptions(overrides);
 
   const createMockImport = (
     name: string,

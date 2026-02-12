@@ -1,21 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  ContextSpec,
   OpenApiReferenceObject,
   OpenApiSchemaObject,
   OpenApiSchemasObject,
 } from '../types';
+import { createContextSpec } from '../__tests__/test-factories';
 import { resolveDiscriminators } from './discriminators';
 
-const context: ContextSpec = {
-  target: 'spec',
-  workspace: '',
-  spec: {} as ContextSpec['spec'],
-  output: {
-    override: {},
-  },
-} as ContextSpec;
+const context = createContextSpec({ target: 'spec' });
 
 describe('resolveDiscriminators getter', () => {
   it('adds discriminator property when missing in subtype schema', () => {
