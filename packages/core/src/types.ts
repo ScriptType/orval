@@ -1089,7 +1089,7 @@ export type GetterParam = {
   name: string;
   definition: string;
   implementation: string;
-  default: boolean;
+  default: unknown;
   required: boolean;
   imports: GeneratorImport[];
 };
@@ -1121,7 +1121,7 @@ type GetterPropBase = {
   name: string;
   definition: string;
   implementation: string;
-  default: boolean;
+  default: unknown;
   required: boolean;
 };
 

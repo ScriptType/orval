@@ -60,9 +60,9 @@ export function getFullRoute(
         Math.min(baseUrl.index ?? 0, servers.length - 1),
       );
       if (!server) return '';
-      if (!server.variables) return server.url;
+      if (!server.variables) return server.url ?? '';
 
-      let url = server.url;
+      let url: string = server.url ?? '';
       const variables = baseUrl.variables;
       for (const variableKey of Object.keys(server.variables)) {
         const variable = server.variables[variableKey];
