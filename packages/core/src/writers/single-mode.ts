@@ -24,7 +24,7 @@ export async function writeSingleMode({
   try {
     const { path, dirname } = getFileInfo(output.target, {
       backupFilename: conventionName(
-        builder.info.title,
+        builder.info.title ?? 'api',
         output.namingConvention,
       ),
       extension: output.fileExtension,

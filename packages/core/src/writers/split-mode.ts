@@ -25,7 +25,7 @@ export async function writeSplitMode({
   try {
     const { filename, dirname, extension } = getFileInfo(output.target, {
       backupFilename: conventionName(
-        builder.info.title,
+        builder.info.title ?? 'api',
         output.namingConvention,
       ),
       extension: output.fileExtension,

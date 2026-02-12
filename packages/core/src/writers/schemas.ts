@@ -433,7 +433,7 @@ export async function writeSchemas({
             if (!match) return;
             return `export * from '${match[1]}';`;
           })
-          .filter(Boolean) ?? [];
+          .filter((x): x is string => typeof x === 'string') ?? [];
 
       const exports = [...new Set([...existingExports, ...currentExports])]
         .toSorted((a, b) => a.localeCompare(b))

@@ -23,7 +23,10 @@ export async function writeTagsMode({
   needSchema,
 }: WriteModeProps): Promise<string[]> {
   const { filename, dirname, extension } = getFileInfo(output.target, {
-    backupFilename: conventionName(builder.info.title, output.namingConvention),
+    backupFilename: conventionName(
+      builder.info.title ?? 'api',
+      output.namingConvention,
+    ),
     extension: output.fileExtension,
   });
 
