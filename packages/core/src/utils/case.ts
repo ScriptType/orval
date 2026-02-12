@@ -137,7 +137,7 @@ export function upper(s: string, fillWith: string, isDeapostrophe?: boolean) {
 }
 
 export function conventionName(name: string, convention: NamingConvention) {
-  let nameConventionTransform = camel;
+  let nameConventionTransform: (s: string) => string = camel;
   switch (convention) {
     case NamingConvention.PASCAL_CASE: {
       nameConventionTransform = pascal;
