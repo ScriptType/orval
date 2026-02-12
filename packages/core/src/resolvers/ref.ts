@@ -5,6 +5,7 @@ import { getRefInfo, type RefInfo } from '../getters/ref';
 import type {
   ContextSpec,
   GeneratorImport,
+  NonBooleanSchemaObject,
   OpenApiComponentsObject,
   OpenApiExampleObject,
   OpenApiExamples,
@@ -24,40 +25,57 @@ export function resolveRef<TSchema extends object = OpenApiComponentsObject>(
   imports: GeneratorImport[];
 } {
   // the schema is referring to another object
-  if ('schema' in schema && schema.schema?.$ref) {
-    const resolvedRef = resolveRef<TSchema>(schema.schema, context, imports);
-    if ('examples' in schema) {
-      schema.examples = resolveExampleRefs(schema.examples, context);
-    }
-    if ('examples' in resolvedRef.schema) {
-      resolvedRef.schema.examples = resolveExampleRefs(
-        resolvedRef.schema.examples,
+  if ('schema' in schema) {
+    const nested = (schema as { schema?: { $ref?: string } }).schema;
+    if (nested?.$ref) {
+      const resolvedRef = resolveRef<TSchema>(
+        nested as object,
         context,
+        imports,
       );
+      if ('examples' in schema) {
+        (schema as { examples: OpenApiExamples }).examples = resolveExampleRefs(
+          (schema as { examples: OpenApiExamples }).examples,
+          context,
+        );
+      }
+      if ('examples' in resolvedRef.schema) {
+        const schemaWithExamples = resolvedRef.schema as {
+          examples: OpenApiExamples;
+        };
+        schemaWithExamples.examples = resolveExampleRefs(
+          schemaWithExamples.examples,
+          context,
+        );
+      }
+      return {
+        schema: {
+          ...schema,
+          schema: resolvedRef.schema,
+        } as TSchema,
+        imports,
+      };
     }
-    return {
-      schema: {
-        ...schema,
-        schema: resolvedRef.schema,
-      } as TSchema,
-      imports,
-    };
   }
 
   if (isDereferenced(schema)) {
     if ('examples' in schema) {
-      schema.examples = resolveExampleRefs(schema.examples, context);
+      (schema as { examples: OpenApiExamples }).examples = resolveExampleRefs(
+        (schema as { examples: OpenApiExamples }).examples,
+        context,
+      );
     }
     return { schema: schema as TSchema, imports };
   }
 
+  const refSchema = schema as OpenApiReferenceObject;
   const {
     currentSchema,
     refInfo: { name, originalName },
-  } = getSchema(schema, context);
+  } = getSchema(refSchema, context);
 
   if (!currentSchema) {
-    throw new Error(`Oops... 🍻. Ref not found: ${schema.$ref}`);
+    throw new Error(`Oops... 🍻. Ref not found: ${refSchema.$ref}`);
   }
 
   return resolveRef<TSchema>(currentSchema, { ...context }, [
