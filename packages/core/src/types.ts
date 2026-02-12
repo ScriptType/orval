@@ -1171,7 +1171,7 @@ export type ScalarValue = {
 };
 
 export type ResolverValue = ScalarValue & {
-  originalSchema: OpenApiSchemaObject;
+  originalSchema: NonBooleanSchemaObject;
 };
 
 export type ResReqTypesValue = ScalarValue & {

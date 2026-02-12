@@ -2,6 +2,7 @@ import { getScalar } from '../getters';
 import type { FormDataContext } from '../getters/object';
 import type {
   ContextSpec,
+  NonBooleanSchemaObject,
   OpenApiReferenceObject,
   OpenApiSchemaObject,
   ResolverValue,
@@ -23,6 +24,21 @@ export function resolveValue({
   context,
   formDataContext,
 }: ResolveValueOptions): ResolverValue {
+  // GUARD: Boolean schemas (OpenAPI 3.1: true = any value, false = no value)
+  if (typeof schema === 'boolean') {
+    return {
+      value: schema ? 'unknown' : 'never',
+      imports: [],
+      schemas: [],
+      isEnum: false,
+      type: 'unknown',
+      isRef: false,
+      hasReadonlyProps: false,
+      originalSchema: {} as NonBooleanSchemaObject,
+      dependencies: [],
+    };
+  }
+
   if (isReference(schema)) {
     const { schema: schemaObject, imports } = resolveRef<OpenApiSchemaObject>(
       schema,
