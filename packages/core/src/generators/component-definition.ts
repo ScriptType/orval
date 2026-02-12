@@ -40,7 +40,10 @@ export function generateComponentDefinition(
       es5keyword: true,
       es5IdentifierName: true,
     });
-    const doc = jsDoc(response);
+    const doc =
+      'description' in response
+        ? jsDoc({ description: response.description })
+        : '';
     const model = `${doc}export type ${modelName} = ${type || 'unknown'};\n`;
 
     generatorSchemas.push(...schemas);
