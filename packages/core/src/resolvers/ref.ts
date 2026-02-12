@@ -7,6 +7,7 @@ import type {
   GeneratorImport,
   OpenApiComponentsObject,
   OpenApiExampleObject,
+  OpenApiExamples,
   OpenApiReferenceObject,
   OpenApiSchemaObject,
 } from '../types';
@@ -14,10 +15,8 @@ import { isReference } from '../utils';
 
 /* eslint-disable @typescript-eslint/no-unnecessary-type-parameters -- TSchema constrains return type for callers (e.g. resolveRef<OpenApiExampleObject>) */
 
-export function resolveRef<
-  TSchema extends OpenApiComponentsObject = OpenApiComponentsObject,
->(
-  schema: OpenApiComponentsObject,
+export function resolveRef<TSchema extends object = OpenApiComponentsObject>(
+  schema: object,
   context: ContextSpec,
   imports: GeneratorImport[] = [],
 ): {
@@ -67,9 +66,7 @@ export function resolveRef<
   ]);
 }
 
-function getSchema<
-  TSchema extends OpenApiComponentsObject = OpenApiComponentsObject,
->(
+function getSchema<TSchema extends object = OpenApiComponentsObject>(
   schema: OpenApiReferenceObject,
   context: ContextSpec,
 ): {
@@ -119,12 +116,10 @@ function getSchema<
 
 /* eslint-enable @typescript-eslint/no-unnecessary-type-parameters */
 
-type Example = OpenApiExampleObject | OpenApiReferenceObject;
-type Examples = Example[] | Record<string, Example> | undefined;
 export function resolveExampleRefs(
-  examples: Examples,
+  examples: OpenApiExamples,
   context: ContextSpec,
-): Examples {
+): OpenApiExamples {
   if (!examples) {
     return undefined;
   }
@@ -133,7 +128,7 @@ export function resolveExampleRefs(
         if (isReference(example)) {
           const { schema } = resolveRef<OpenApiExampleObject>(example, context);
           // Bridge assertion: ExampleObject.value is typed as `any`
-          return schema.value as Example;
+          return schema.value as OpenApiExampleObject | OpenApiReferenceObject;
         }
         return example;
       })
