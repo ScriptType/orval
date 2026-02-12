@@ -1167,7 +1167,7 @@ export type ScalarValue = {
   isRef: boolean;
   dependencies: string[];
   example?: unknown;
-  examples?: Record<string, unknown>;
+  examples?: OpenApiExamples;
 };
 
 export type ResolverValue = ScalarValue & {
@@ -1307,6 +1307,13 @@ export type OpenApiSchemaObjectType =
 // OpenAPI type aliases. Intended to make it easy to swap to OpenAPI v3.2 in the future
 export type OpenApiDocument = OpenAPIV3_1.Document;
 export type OpenApiSchemaObject = OpenAPIV3_1.SchemaObject;
+/**
+ * SchemaObject without the boolean union member.
+ * OpenAPI 3.1 allows `true` (any value) and `false` (no value) as valid schemas.
+ * Most generator code needs property access (.type, .properties, etc.),
+ * so use this type after guarding against boolean schemas.
+ */
+export type NonBooleanSchemaObject = Exclude<OpenApiSchemaObject, boolean>;
 export type OpenApiSchemasObject = Record<string, OpenApiSchemaObject>;
 export type OpenApiReferenceObject = OpenAPIV3_1.ReferenceObject & {
   // https://github.com/scalar/scalar/issues/7405
@@ -1325,3 +1332,12 @@ export type OpenApiOperationObject = OpenAPIV3_1.OperationObject;
 export type OpenApiMediaTypeObject = OpenAPIV3_1.MediaTypeObject;
 export type OpenApiEncodingObject = OpenAPIV3_1.EncodingObject;
 export type OpenApiServerObject = OpenAPIV3_1.ServerObject;
+/**
+ * Dual-format Examples type for OpenAPI 3.0 (Record) and 3.1 (array).
+ * OpenAPI 3.0: examples is Record<string, ExampleObject | ReferenceObject>
+ * OpenAPI 3.1: examples on schemas is any[] (from BaseSchemaObject)
+ */
+export type OpenApiExamples =
+  | Record<string, OpenApiExampleObject | OpenApiReferenceObject>
+  | (OpenApiExampleObject | OpenApiReferenceObject)[]
+  | undefined;
