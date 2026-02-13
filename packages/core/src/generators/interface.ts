@@ -1,15 +1,10 @@
 import { getScalar } from '../getters';
-import type {
-  ContextSpec,
-  NonBooleanSchemaObject,
-  OpenApiReferenceObject,
-  OpenApiSchemaObject,
-} from '../types';
+import type { ContextSpec, StrictSchemaObject } from '../types';
 import { jsDoc } from '../utils';
 
 interface GenerateInterfaceOptions {
   name: string;
-  schema: NonBooleanSchemaObject;
+  schema: StrictSchemaObject;
   context: ContextSpec;
 }
 
@@ -44,10 +39,7 @@ export function generateInterface({
   }
 
   if (scalar.type === 'object' && !shouldUseTypeAlias) {
-    // Bridge assertion: schema.properties is `any` due to AnyOtherAttribute
-    const properties = schema.properties as
-      | Record<string, OpenApiSchemaObject | OpenApiReferenceObject>
-      | undefined;
+    const properties = schema.properties;
     if (
       properties &&
       Object.values(properties).length > 0 &&

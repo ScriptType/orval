@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GeneratorSchema, NonBooleanSchemaObject } from '../types';
+import type { GeneratorSchema, StrictSchemaObject } from '../types';
 import { EnumGeneration, NamingConvention } from '../types';
 import { createContextSpec } from '../__tests__/test-factories';
 import { generateImports } from './imports';
@@ -18,7 +18,7 @@ describe('generateInterface', () => {
   });
 
   it('should return const object with typeof', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {
         message: {
@@ -62,7 +62,7 @@ export type TestSchema = typeof TestSchemaValue;
 
   // With enumGenerationType: const - mimic default enum output
   it('should inline const literal when enum + const are both present', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {
         kind: {
@@ -105,7 +105,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
   // With enumGenerationType: const - keep referenced enums type-only
   it('should use type-only imports for referenced schemas in interfaces', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {
         status: {
@@ -143,7 +143,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
   // With enumGenerationType: const - keep inline enums type-only in interfaces
   it('should use type-only imports for inline enums in interfaces even with const enum generation', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {
         status: {
@@ -201,7 +201,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should return type', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {},
       required: ['message', 'code'],
@@ -225,7 +225,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should generate index signature with propertyNames enum (OpenAPI 3.1)', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -234,7 +234,7 @@ export type ConstEnum = typeof ConstEnumValue;
       additionalProperties: {
         type: 'string',
       },
-    };
+    } as StrictSchemaObject;
 
     const got = generateInterface({
       name: 'MyObject',
@@ -254,14 +254,14 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with additional properties as boolean', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema = {
       type: 'object',
       propertyNames: {
         type: 'string',
         enum: ['key1', 'key2', 'key3'],
       },
       additionalProperties: true,
-    };
+    } as StrictSchemaObject;
 
     const got = generateInterface({
       name: 'MyObject',
@@ -281,7 +281,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with specific type in additionalProperties', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -290,7 +290,7 @@ export type ConstEnum = typeof ConstEnumValue;
       additionalProperties: {
         type: 'integer',
       },
-    };
+    } as StrictSchemaObject;
 
     const got = generateInterface({
       name: 'MyObject',
@@ -310,7 +310,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should use string when propertyNames has no enum', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema = {
       type: 'object',
       propertyNames: {
         type: 'string',
@@ -319,7 +319,7 @@ export type ConstEnum = typeof ConstEnumValue;
       additionalProperties: {
         type: 'string',
       },
-    };
+    } as StrictSchemaObject;
 
     const got = generateInterface({
       name: 'MyObject',
@@ -339,7 +339,7 @@ export type ConstEnum = typeof ConstEnumValue;
   });
 
   it('should handle propertyNames enum with properties already defined', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema = {
       type: 'object',
       properties: {
         existingProp: {
@@ -354,7 +354,7 @@ export type ConstEnum = typeof ConstEnumValue;
         type: 'number',
       },
       required: ['existingProp'],
-    };
+    } as StrictSchemaObject;
 
     const got = generateInterface({
       name: 'MyObject',
@@ -377,7 +377,7 @@ export type ConstEnum = typeof ConstEnumValue;
   ] as const)(
     'should generate %s primitive properties: type alias when aliasCombinedTypes is true, inlined by default',
     (combiner, operator, combinerName) => {
-      const schema: NonBooleanSchemaObject = {
+      const schema: StrictSchemaObject = {
         type: 'object',
         properties: {
           field: {
@@ -417,7 +417,7 @@ export type ConstEnum = typeof ConstEnumValue;
   );
 
   it('should generate object properties: intermediate types when aliasCombinedTypes is true, inlined by default', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       type: 'object',
       properties: {
         field: {
@@ -473,7 +473,7 @@ export type ConstEnum = typeof ConstEnumValue;
   // Comprehensive test: (a|b) & c & (d|e) & (f|g)
   // Tests: nested oneOf, nested anyOf, sibling oneOf, different positions
   it('allOf + union precedence: should wrap all unions in parens', () => {
-    const schema: NonBooleanSchemaObject = {
+    const schema: StrictSchemaObject = {
       allOf: [
         {
           oneOf: [
@@ -503,7 +503,7 @@ export type ConstEnum = typeof ConstEnumValue;
 
   describe('duplicate union types', () => {
     it('should not produce duplicate null in nullable object types', () => {
-      const schema: NonBooleanSchemaObject = {
+      const schema: StrictSchemaObject = {
         type: ['object', 'null'],
       };
 
@@ -517,7 +517,7 @@ export type ConstEnum = typeof ConstEnumValue;
     });
 
     it('should not produce duplicate types in oneOf/anyOf', () => {
-      const schema: NonBooleanSchemaObject = {
+      const schema: StrictSchemaObject = {
         oneOf: [{ type: 'string' }, { type: 'string' }, { type: 'number' }],
       };
 
