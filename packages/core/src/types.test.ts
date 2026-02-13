@@ -29,11 +29,11 @@ describe('StrictSchemaObject', () => {
   });
 
   it('should be assignable from NonBooleanSchemaObject', () => {
-    expectTypeOf<NonBooleanSchemaObject>().toMatchTypeOf<StrictSchemaObject>();
+    expectTypeOf<NonBooleanSchemaObject>().toExtend<StrictSchemaObject>();
   });
 
   it('should be assignable to NonBooleanSchemaObject', () => {
-    expectTypeOf<StrictSchemaObject>().toMatchTypeOf<NonBooleanSchemaObject>();
+    expectTypeOf<StrictSchemaObject>().toExtend<NonBooleanSchemaObject>();
   });
 });
 
@@ -52,7 +52,7 @@ describe('getSchemaExtension', () => {
   it('should default generic to unknown', () => {
     const schema = {} as StrictSchemaObject;
     const result = getSchemaExtension(schema, 'x-custom');
-    expectTypeOf(result).toEqualTypeOf<unknown | undefined>();
+    expectTypeOf(result).toEqualTypeOf<unknown>();
   });
 
   it('should accept NonBooleanSchemaObject without cast', () => {
