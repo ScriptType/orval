@@ -1,5 +1,9 @@
 import { describe, it, expectTypeOf } from 'vitest';
-import type { StrictSchemaObject, NonBooleanSchemaObject } from './types';
+import type {
+  StrictSchemaObject,
+  NonBooleanSchemaObject,
+  ResolverValue,
+} from './types';
 import { getSchemaExtension } from './types';
 
 describe('StrictSchemaObject', () => {
@@ -55,5 +59,21 @@ describe('getSchemaExtension', () => {
     // This must compile without error — NonBooleanSchemaObject is assignable to StrictSchemaObject
     const result = getSchemaExtension<string[]>(nb, 'x-enumNames');
     expectTypeOf(result).toEqualTypeOf<string[] | undefined>();
+  });
+});
+
+describe('ResolverValue', () => {
+  it('originalSchema should be StrictSchemaObject', () => {
+    expectTypeOf<
+      ResolverValue['originalSchema']
+    >().toEqualTypeOf<StrictSchemaObject>();
+  });
+
+  it('originalSchema.type should not be any', () => {
+    expectTypeOf<ResolverValue['originalSchema']['type']>().not.toBeAny();
+  });
+
+  it('originalSchema.properties should not be any', () => {
+    expectTypeOf<ResolverValue['originalSchema']['properties']>().not.toBeAny();
   });
 });
