@@ -79,7 +79,8 @@ export function getProps({
     const implementation = `{ ${params
       .map((property) =>
         property.default
-          ? `${property.name} = ${property.default}` // if we use property.implementation, we will get `{ version: number = 1 }: ListPetsPathParameters = {}` which isn't valid
+          ? // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions -- OpenAPI defaults are scalar values (string/number/boolean)
+            `${property.name} = ${property.default}`
           : property.name,
       )
       .join(', ')} }: ${parameterTypeName}${isOptional ? ' = {}' : ''}`;
