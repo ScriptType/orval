@@ -6,12 +6,13 @@ import type {
   OpenApiSchemaObject,
   ResolverValue,
   ScalarValue,
+  StrictSchemaObject,
 } from '../types';
 import { compareVersions } from '../utils';
 import type { FormDataContext } from './object';
 
 interface GetArrayOptions {
-  schema: OpenApiSchemaObject;
+  schema: StrictSchemaObject;
   name?: string;
   context: ContextSpec;
   formDataContext?: FormDataContext;
@@ -28,11 +29,13 @@ export function getArray({
   context,
   formDataContext,
 }: GetArrayOptions): ScalarValue {
-  // Bridge assertions: extract typed values from AnyOtherAttribute-infected schema
-  const schemaPrefixItems = schema.prefixItems as
+  // Bridge assertions: prefixItems/items exist only on ArraySchemaObject union member,
+  // but getArray is called after type=array narrowing so they are safe to access.
+  // .example/.examples are declared `any` in upstream OpenAPI types.
+  const schemaPrefixItems = (schema as Record<string, unknown>).prefixItems as
     | (OpenApiSchemaObject | OpenApiReferenceObject)[]
     | undefined;
-  const schemaItems = schema.items as
+  const schemaItems = (schema as Record<string, unknown>).items as
     | OpenApiSchemaObject
     | OpenApiReferenceObject
     | undefined;

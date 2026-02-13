@@ -53,7 +53,7 @@ export function resolveValue({
     const refName = resolvedImport.name;
     if (!context.parents?.includes(refName)) {
       const scalar = getScalar({
-        item: schemaObject,
+        item: schemaObject as StrictSchemaObject,
         name: refName,
         context: {
           ...context,

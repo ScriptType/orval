@@ -3,9 +3,9 @@ import { isArray } from 'remeda';
 import { resolveExampleRefs } from '../resolvers';
 import type {
   ContextSpec,
-  NonBooleanSchemaObject,
   OpenApiSchemaObjectType,
   ScalarValue,
+  StrictSchemaObject,
 } from '../types';
 import { escape, isString } from '../utils';
 import { getFormDataFieldFileType } from '../utils/content-type';
@@ -18,7 +18,7 @@ import { getObject } from './object';
 type SchemaEnumValue = string | number | boolean | null;
 
 interface GetScalarOptions {
-  item: NonBooleanSchemaObject;
+  item: StrictSchemaObject;
   name?: string;
   context: ContextSpec;
   formDataContext?: FormDataContext;
@@ -36,20 +36,21 @@ export function getScalar({
   context,
   formDataContext,
 }: GetScalarOptions): ScalarValue {
-  // Bridge assertions: extract typed values from AnyOtherAttribute-infected schema
+  // Bridge assertions: extract typed values from schema
+  // StrictSchemaObject makes .type, .readOnly, .format typed; but .nullable is Omit'd in V3.1,
+  // and .enum/.example/.const are declared `any` in upstream OpenAPI types
   const schemaEnum = item.enum as SchemaEnumValue[] | undefined;
-  const schemaType = item.type as
-    | OpenApiSchemaObjectType
-    | OpenApiSchemaObjectType[]
-    | undefined;
-  const schemaReadOnly = item.readOnly as boolean | undefined;
+  const schemaType = item.type;
+  const schemaReadOnly = item.readOnly;
   const schemaExample = item.example as unknown;
   const schemaExamples = item.examples as Parameters<
     typeof resolveExampleRefs
   >[0];
   const schemaConst = item.const as string | undefined;
-  const schemaFormat = item.format as string | undefined;
-  const schemaNullable = item.nullable as boolean | undefined;
+  const schemaFormat = item.format;
+  const schemaNullable = (item as Record<string, unknown>).nullable as
+    | boolean
+    | undefined;
 
   const nullable =
     (isArray(schemaType) && schemaType.includes('null')) ||
@@ -65,7 +66,7 @@ export function getScalar({
     | OpenApiSchemaObjectType
     | OpenApiSchemaObjectType[]
     | undefined = schemaType;
-  if (!itemType && item.items) {
+  if (!itemType && 'items' in item) {
     item.type = 'array';
     itemType = 'array';
   }
@@ -218,9 +219,9 @@ export function getScalar({
       if (isArray(itemType)) {
         const anyOfVariants = itemType.map((type) =>
           Object.assign({}, item, { type }),
-        ) as NonBooleanSchemaObject[];
+        ) as StrictSchemaObject[];
         return combineSchemas({
-          schema: { anyOf: anyOfVariants } as NonBooleanSchemaObject,
+          schema: { anyOf: anyOfVariants } as StrictSchemaObject,
           name,
           separator: 'anyOf',
           context,
@@ -254,9 +255,7 @@ export function getScalar({
       // - atPart: false -> always pass (navigating to properties)
       // - atPart: true + combiner -> pass (combiner members are still the same part)
       // - atPart: true + plain object -> don't pass (nested properties are JSON)
-      const hasCombiners = (item.allOf ?? item.anyOf ?? item.oneOf) as
-        | unknown[]
-        | undefined;
+      const hasCombiners = item.allOf ?? item.anyOf ?? item.oneOf;
       const shouldPassContext =
         formDataContext?.atPart === false ||
         (formDataContext?.atPart && hasCombiners);
