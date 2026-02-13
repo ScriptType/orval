@@ -755,13 +755,13 @@ export type NormalizedHookOptions = HooksOptions<NormalizedHookCommand>;
 export type Verbs = 'post' | 'put' | 'get' | 'patch' | 'delete' | 'head';
 
 export const Verbs = {
-  POST: 'post' as Verbs,
-  PUT: 'put' as Verbs,
-  GET: 'get' as Verbs,
-  PATCH: 'patch' as Verbs,
-  DELETE: 'delete' as Verbs,
-  HEAD: 'head' as Verbs,
-};
+  POST: 'post',
+  PUT: 'put',
+  GET: 'get',
+  PATCH: 'patch',
+  DELETE: 'delete',
+  HEAD: 'head',
+} as const satisfies Record<string, Verbs>;
 
 export type ImportOpenApi = {
   spec: OpenApiDocument;

@@ -241,7 +241,7 @@ export async function generateVerbOptions({
   const doc = jsDoc({ description, deprecated, summary });
 
   const verbOption: GeneratorVerbOptions = {
-    verb: verb as Verbs,
+    verb: verb,
     tags,
     route,
     pathRoute,

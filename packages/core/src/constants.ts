@@ -16,7 +16,7 @@ export const generalJSTypesWithArray = generalJSTypes.flatMap((type) => [
   `${type}[]`,
 ]);
 
-export const VERBS_WITH_BODY = [
+export const VERBS_WITH_BODY: readonly Verbs[] = [
   Verbs.POST,
   Verbs.PUT,
   Verbs.PATCH,
