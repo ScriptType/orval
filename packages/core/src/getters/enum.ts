@@ -3,7 +3,8 @@ import { keyword } from 'esutils';
 import {
   EnumGeneration,
   NamingConvention,
-  type OpenApiSchemaObject,
+  getSchemaExtension,
+  type StrictSchemaObject,
 } from '../types';
 import {
   conventionName,
@@ -17,10 +18,11 @@ import {
 /** Bridge type for enum values from AnyOtherAttribute-infected schema extensions */
 type SchemaEnumValue = string | number | boolean | null;
 
-export function getEnumNames(schemaObject: OpenApiSchemaObject | undefined) {
-  const names = (schemaObject?.['x-enumNames'] ??
-    schemaObject?.['x-enumnames'] ??
-    schemaObject?.['x-enum-varnames']) as string[] | undefined;
+export function getEnumNames(schemaObject: StrictSchemaObject | undefined) {
+  const names =
+    getSchemaExtension<string[]>(schemaObject, 'x-enumNames') ??
+    getSchemaExtension<string[]>(schemaObject, 'x-enumnames') ??
+    getSchemaExtension<string[]>(schemaObject, 'x-enum-varnames');
 
   if (!names) return;
 
@@ -28,11 +30,12 @@ export function getEnumNames(schemaObject: OpenApiSchemaObject | undefined) {
 }
 
 export function getEnumDescriptions(
-  schemaObject: OpenApiSchemaObject | undefined,
+  schemaObject: StrictSchemaObject | undefined,
 ) {
-  const descriptions = (schemaObject?.['x-enumDescriptions'] ??
-    schemaObject?.['x-enumdescriptions'] ??
-    schemaObject?.['x-enum-descriptions']) as string[] | undefined;
+  const descriptions =
+    getSchemaExtension<string[]>(schemaObject, 'x-enumDescriptions') ??
+    getSchemaExtension<string[]>(schemaObject, 'x-enumdescriptions') ??
+    getSchemaExtension<string[]>(schemaObject, 'x-enum-descriptions');
 
   if (!descriptions) return;
 
@@ -212,7 +215,7 @@ const getUnion = (value: string, enumName: string) => {
 type CombinedEnumInput = {
   value: string;
   isRef: boolean;
-  schema: OpenApiSchemaObject | undefined;
+  schema: StrictSchemaObject | undefined;
 };
 
 type CombinedEnumValue = {
@@ -221,9 +224,7 @@ type CombinedEnumValue = {
   hasNull: boolean;
 };
 
-export function getEnumUnionFromSchema(
-  schema: OpenApiSchemaObject | undefined,
-) {
+export function getEnumUnionFromSchema(schema: StrictSchemaObject | undefined) {
   if (!schema?.enum) return '';
   const schemaEnum = schema.enum as SchemaEnumValue[];
   return schemaEnum
@@ -236,7 +237,7 @@ const stripNullUnion = (value: string) =>
   value.replaceAll(/\s*\|\s*null/g, '').trim();
 
 const isSpreadableEnumRef = (
-  schema: OpenApiSchemaObject | undefined,
+  schema: StrictSchemaObject | undefined,
   refName: string,
 ) => {
   if (!schema?.enum || !refName) return false;
@@ -249,7 +250,7 @@ const isSpreadableEnumRef = (
 };
 
 const buildInlineEnum = (
-  schema: OpenApiSchemaObject | undefined,
+  schema: StrictSchemaObject | undefined,
   enumValue?: string,
 ) => {
   const names = getEnumNames(schema);
@@ -266,7 +267,9 @@ export function getCombinedEnumValue(
     if (input.value.includes('| null')) return true;
     const schema = input.schema;
     if (!schema) return false;
-    if (schema.nullable === true) return true;
+    // OpenAPI 3.0 nullable -- not on v3.1 type, access via cast
+    if ((schema as unknown as Record<string, unknown>).nullable === true)
+      return true;
     if (Array.isArray(schema.type) && schema.type.includes('null')) return true;
     const schemaEnum = schema.enum as SchemaEnumValue[] | undefined;
     // eslint-disable-next-line unicorn/no-null -- OpenAPI enum values include literal null
