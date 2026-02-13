@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { OpenApiResponsesObject } from '../types';
 import { createContextSpec } from '../__tests__/test-factories';
+import type { OpenApiResponsesObject } from '../types';
 import { getResponse } from './response';
 
 const context = createContextSpec({

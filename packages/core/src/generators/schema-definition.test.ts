@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { InputFiltersOptions, OpenApiSchemasObject } from '../types';
 import { createContextSpec } from '../__tests__/test-factories';
+import type { InputFiltersOptions, OpenApiSchemasObject } from '../types';
 import { generateSchemasDefinition } from './schema-definition';
 
 describe('generateSchemasDefinition', () => {

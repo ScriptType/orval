@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { createNormalizedOutputOptions } from '../__tests__/test-factories';
 import type { GeneratorImport, NormalizedOutputOptions } from '../types';
 import { NamingConvention } from '../types';
-import { createNormalizedOutputOptions } from '../__tests__/test-factories';
 import { generateImportsForBuilder } from './generate-imports-for-builder';
 
 describe('generateImportsForBuilder', () => {

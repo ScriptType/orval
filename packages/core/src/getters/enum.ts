@@ -2,8 +2,8 @@ import { keyword } from 'esutils';
 
 import {
   EnumGeneration,
-  NamingConvention,
   getSchemaExtension,
+  NamingConvention,
   type StrictSchemaObject,
 } from '../types';
 import {

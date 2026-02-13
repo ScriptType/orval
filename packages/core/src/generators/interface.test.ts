@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { createContextSpec } from '../__tests__/test-factories';
 import type { GeneratorSchema, StrictSchemaObject } from '../types';
 import { EnumGeneration, NamingConvention } from '../types';
-import { createContextSpec } from '../__tests__/test-factories';
 import { generateImports } from './imports';
 import { generateInterface } from './interface';
 

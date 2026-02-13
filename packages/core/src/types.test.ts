@@ -1,8 +1,9 @@
-import { describe, it, expectTypeOf } from 'vitest';
+import { describe, expectTypeOf, it } from 'vitest';
+
 import type {
-  StrictSchemaObject,
   NonBooleanSchemaObject,
   ResolverValue,
+  StrictSchemaObject,
 } from './types';
 import { getSchemaExtension } from './types';
 

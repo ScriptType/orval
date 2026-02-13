@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { OpenApiComponentsObject } from '../types';
 import { createContextSpec } from '../__tests__/test-factories';
+import type { OpenApiComponentsObject } from '../types';
 import { generateParameterDefinition } from './parameter-definition';
 
 describe('generateParameterDefinition', () => {

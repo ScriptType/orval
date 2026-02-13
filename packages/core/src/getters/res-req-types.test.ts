@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { createContextSpec } from '../__tests__/test-factories';
 import type {
   ContextSpec,
   OpenApiRequestBodyObject,
   OpenApiResponseObject,
   OpenApiSchemaObject,
 } from '../types';
-import { createContextSpec } from '../__tests__/test-factories';
 import { isString } from '../utils';
 import { isBinaryContentType } from '../utils/content-type';
 import { getResReqTypes } from './res-req-types';

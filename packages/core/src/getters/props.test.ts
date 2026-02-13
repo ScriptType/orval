@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { createContextSpec } from '../__tests__/test-factories';
 import type {
   GetterQueryParam,
   OpenApiReferenceObject,
   OpenApiRequestBodyObject,
 } from '../types';
-import { createContextSpec } from '../__tests__/test-factories';
 import { getProps } from './props';
 
 describe('getProps', () => {
