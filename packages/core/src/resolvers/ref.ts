@@ -113,7 +113,7 @@ function getSchema<TSchema extends object = OpenApiComponentsObject>(
   }
 
   let currentSchema: NonBooleanSchemaObject | OpenApiReferenceObject =
-    schemaByRefPaths || context.spec;
+    schemaByRefPaths;
 
   // Handle OpenAPI 3.0 nullable property
   // Bridge assertion: schema properties are `any` due to AnyOtherAttribute
