@@ -2,11 +2,11 @@ import { getScalar } from '../getters';
 import type { FormDataContext } from '../getters/object';
 import type {
   ContextSpec,
-  NonBooleanSchemaObject,
   OpenApiReferenceObject,
   OpenApiSchemaObject,
   ResolverValue,
   SchemaType,
+  StrictSchemaObject,
 } from '../types';
 import { isReference } from '../utils';
 import { resolveRef } from './ref';
@@ -34,7 +34,7 @@ export function resolveValue({
       type: 'unknown',
       isRef: false,
       hasReadonlyProps: false,
-      originalSchema: {} as NonBooleanSchemaObject,
+      originalSchema: {} as StrictSchemaObject,
       dependencies: [],
     };
   }
@@ -94,7 +94,7 @@ export function resolveValue({
       type: (schemaObject.type as SchemaType | undefined) ?? 'object',
       schemas: [],
       isEnum: !!schemaObject.enum,
-      originalSchema: schemaObject,
+      originalSchema: schemaObject as StrictSchemaObject,
       hasReadonlyProps,
       isRef: true,
       dependencies: [resolvedImport.name],

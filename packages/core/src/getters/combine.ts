@@ -10,6 +10,7 @@ import {
   type OpenApiReferenceObject,
   type OpenApiSchemaObject,
   type ScalarValue,
+  type StrictSchemaObject,
 } from '../types';
 import { dedupeUnionType, getNumberWord, isSchema, pascal } from '../utils';
 import { getCombinedEnumValue } from './enum';
@@ -20,7 +21,7 @@ import { getScalar } from './scalar';
 type CombinedData = {
   imports: GeneratorImport[];
   schemas: GeneratorSchema[];
-  originalSchema: (NonBooleanSchemaObject | undefined)[];
+  originalSchema: (StrictSchemaObject | undefined)[];
   values: string[];
   isRef: boolean[];
   isEnum: boolean[];
