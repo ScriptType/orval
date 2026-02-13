@@ -13,8 +13,8 @@ type DeepPartial<T> = T extends (...args: never[]) => unknown
   ? T
   : T extends Date | RegExp
     ? T
-    : T extends Array<infer U>
-      ? Array<DeepPartial<U>>
+    : T extends (infer U)[]
+      ? DeepPartial<U>[]
       : T extends object
         ? { [P in keyof T]?: DeepPartial<T[P]> }
         : T;
@@ -33,7 +33,7 @@ function deepMerge<T extends Record<string, unknown>>(
     if (val === undefined) {
       continue;
     }
-    if (
+    result[key] =
       typeof val === 'object' &&
       val !== null &&
       !Array.isArray(val) &&
@@ -43,14 +43,11 @@ function deepMerge<T extends Record<string, unknown>>(
       typeof base[key] === 'object' &&
       base[key] !== null &&
       !Array.isArray(base[key])
-    ) {
-      result[key] = deepMerge(
-        base[key] as Record<string, unknown>,
-        val as DeepPartial<Record<string, unknown>>,
-      ) as T[keyof T];
-    } else {
-      result[key] = val as T[keyof T];
-    }
+        ? (deepMerge(
+            base[key] as Record<string, unknown>,
+            val as DeepPartial<Record<string, unknown>>,
+          ) as T[keyof T])
+        : (val as T[keyof T]);
   }
   return result;
 }
@@ -147,7 +144,7 @@ export function createNormalizedOutputOptions(
     unionAddMissingProperties: false,
     optionsParamRequired: false,
     propertySortOrder: PropertySortOrder.SPECIFICATION,
-    override: createNormalizedOverrideOutput(overrides?.override),
+    override: createNormalizedOverrideOutput(overrides.override),
   };
 
   // Build a copy without `override` in overrides to avoid double-applying
@@ -170,8 +167,8 @@ export function createContextSpec(
   const base: ContextSpec = {
     target: 'typescript',
     workspace: '',
-    spec: (overrides?.spec ?? {}) as OpenApiDocument,
-    output: createNormalizedOutputOptions(overrides?.output),
+    spec: (overrides.spec ?? {}) as OpenApiDocument,
+    output: createNormalizedOutputOptions(overrides.output),
   };
 
   // Build a copy without `spec` and `output` in overrides to avoid double-applying
