@@ -3,11 +3,11 @@ import { resolveObject } from '../resolvers/object';
 import {
   type ContextSpec,
   type GeneratorImport,
-  type NonBooleanSchemaObject,
   type OpenApiReferenceObject,
   type OpenApiSchemaObject,
   PropertySortOrder,
   type ScalarValue,
+  type StrictSchemaObject,
 } from '../types';
 import {
   escape,
@@ -26,12 +26,11 @@ import { getRefInfo } from './ref';
  * Extract enum values from propertyNames schema (OpenAPI 3.1)
  * Returns undefined if propertyNames doesn't have an enum
  */
-function getPropertyNamesEnum(
-  item: NonBooleanSchemaObject,
-): string[] | undefined {
+function getPropertyNamesEnum(item: StrictSchemaObject): string[] | undefined {
   if (
     'propertyNames' in item &&
     item.propertyNames &&
+    typeof item.propertyNames === 'object' &&
     'enum' in item.propertyNames
   ) {
     const propertyNames = item.propertyNames as { enum?: unknown[] };
@@ -46,7 +45,7 @@ function getPropertyNamesEnum(
  * Generate index signature key type based on propertyNames enum
  * Returns union type string like "'foo' | 'bar'" or 'string' if no enum
  */
-function getIndexSignatureKey(item: NonBooleanSchemaObject): string {
+function getIndexSignatureKey(item: StrictSchemaObject): string {
   const enumValues = getPropertyNamesEnum(item);
   if (enumValues && enumValues.length > 0) {
     return enumValues.map((val) => `'${val}'`).join(' | ');
@@ -55,7 +54,7 @@ function getIndexSignatureKey(item: NonBooleanSchemaObject): string {
 }
 
 function getPropertyNamesRecordType(
-  item: NonBooleanSchemaObject,
+  item: StrictSchemaObject,
   valueType: string,
 ): string | undefined {
   const enumValues = getPropertyNamesEnum(item);
@@ -87,7 +86,7 @@ export type FormDataContext =
   | { atPart: true; partContentType?: string };
 
 interface GetObjectOptions {
-  item: NonBooleanSchemaObject;
+  item: StrictSchemaObject;
   name?: string;
   context: ContextSpec;
   nullable: string;
@@ -111,7 +110,9 @@ export function getObject({
   formDataContext,
 }: GetObjectOptions): ScalarValue {
   if (isReference(item)) {
-    const { name } = getRefInfo(item.$ref as string, context);
+    // isReference() confirms item has $ref; cast to access reference properties
+    const ref = item as unknown as OpenApiReferenceObject;
+    const { name } = getRefInfo(ref.$ref as string, context);
     return {
       value: name + nullable,
       imports: [{ name }],
@@ -119,11 +120,11 @@ export function getObject({
       isEnum: false,
       type: 'object',
       isRef: true,
-      hasReadonlyProps: (item.readOnly as boolean | undefined) ?? false,
+      hasReadonlyProps: (ref.readOnly as boolean | undefined) ?? false,
       dependencies: [name],
-      example: item.example as unknown,
+      example: ref.example as unknown,
       examples: resolveExampleRefs(
-        item.examples as
+        ref.examples as
           | Record<string, OpenApiReferenceObject | { value?: unknown }>
           | undefined,
         context,
@@ -131,10 +132,9 @@ export function getObject({
     };
   }
 
-  // Bridge: isReference() typeguard narrows item to never due to AnyOtherAttribute
-  // intersection making NonBooleanSchemaObject structurally overlap with OpenApiReferenceObject.
+  // Bridge: isReference() typeguard narrows item to never due to structural overlap.
   // Re-assert the type after the reference guard since we know item is a schema object here.
-  const schemaObj = item as NonBooleanSchemaObject;
+  const schemaObj = item as StrictSchemaObject;
 
   if (schemaObj.allOf || schemaObj.oneOf || schemaObj.anyOf) {
     const separator = schemaObj.allOf
@@ -154,16 +154,13 @@ export function getObject({
   }
 
   if (Array.isArray(schemaObj.type)) {
-    const typeArray = schemaObj.type as string[];
-    // Bridge: schemaObj is NonBooleanSchemaObject which includes AnyOtherAttribute index signature.
-    // Spreading it directly would carry `any` into the result. Cast to break the chain.
-    const baseItem = schemaObj as NonBooleanSchemaObject;
+    const typeArray = schemaObj.type;
     return combineSchemas({
       schema: {
         anyOf: typeArray.map(
-          (type) => ({ ...baseItem, type }) as NonBooleanSchemaObject,
+          (type) => ({ ...schemaObj, type }) as StrictSchemaObject,
         ),
-      } as NonBooleanSchemaObject,
+      } as StrictSchemaObject,
       name,
       separator: 'anyOf',
       context,
@@ -171,11 +168,7 @@ export function getObject({
     });
   }
 
-  // Bridge assertion: properties is typed as { [name: string]: ReferenceObject | SchemaObject }
-  // but AnyOtherAttribute index signature infects all property access to return `any`
-  const itemProperties = schemaObj.properties as
-    | Record<string, OpenApiSchemaObject | OpenApiReferenceObject>
-    | undefined;
+  const itemProperties = schemaObj.properties;
 
   if (itemProperties && Object.entries(itemProperties).length > 0) {
     const entries = Object.entries(itemProperties);
@@ -202,7 +195,7 @@ export function getObject({
         context,
       ),
     };
-    const itemRequired = schemaObj.required as string[] | undefined;
+    const itemRequired = schemaObj.required;
     for (const [index, [key, schema]] of entries.entries()) {
       const isRequired = (
         Array.isArray(itemRequired) ? itemRequired : []
@@ -246,16 +239,16 @@ export function getObject({
       });
 
       const isReadOnly =
-        (schemaObj.readOnly as boolean | undefined) ??
+        schemaObj.readOnly ??
         ((schema as OpenApiSchemaObject).readOnly as boolean | undefined);
       if (!index) {
         acc.value += '{';
       }
 
       // Bridge: schema from properties is OpenApiSchemaObject | OpenApiReferenceObject;
-      // jsDoc expects a simple object shape. Cast to NonBooleanSchemaObject since
+      // jsDoc expects a simple object shape. Cast to StrictSchemaObject since
       // property schemas are never boolean literals.
-      const doc = jsDoc(schema as NonBooleanSchemaObject, true, context);
+      const doc = jsDoc(schema as StrictSchemaObject, true, context);
 
       if (isReadOnly ?? false) {
         acc.hasReadonlyProps = true;
@@ -310,13 +303,7 @@ export function getObject({
       acc.dependencies.push(...resolvedValue.dependencies);
 
       if (entries.length - 1 === index) {
-        // Bridge assertion: additionalProperties is boolean | ReferenceObject | SchemaObject
-        // but AnyOtherAttribute infects property access
-        const additionalProps = schemaObj.additionalProperties as
-          | boolean
-          | OpenApiSchemaObject
-          | OpenApiReferenceObject
-          | undefined;
+        const additionalProps = schemaObj.additionalProperties;
         if (additionalProps) {
           if (isBoolean(additionalProps)) {
             const recordType = getPropertyNamesRecordType(schemaObj, 'unknown');
@@ -329,12 +316,11 @@ export function getObject({
               acc.value += `\n  [key: ${keyType}]: unknown;\n }`;
             }
           } else {
-            // After isBoolean() guard, additionalProps is SchemaObject | ReferenceObject (boolean excluded)
-            const nonBoolAdditionalProps = additionalProps as
-              | NonBooleanSchemaObject
-              | OpenApiReferenceObject;
+            // After isBoolean() guard, additionalProps is SchemaObject | ReferenceObject
             const resolvedValue = resolveValue({
-              schema: nonBoolAdditionalProps,
+              schema: additionalProps as
+                | OpenApiSchemaObject
+                | OpenApiReferenceObject,
               name,
               context,
             });
@@ -362,13 +348,8 @@ export function getObject({
     return acc;
   }
 
-  // Bridge assertion: additionalProperties is boolean | ReferenceObject | SchemaObject
-  const outerAdditionalProps = schemaObj.additionalProperties as
-    | boolean
-    | OpenApiSchemaObject
-    | OpenApiReferenceObject
-    | undefined;
-  const readOnlyFlag = schemaObj.readOnly as boolean | undefined;
+  const outerAdditionalProps = schemaObj.additionalProperties;
+  const readOnlyFlag = schemaObj.readOnly;
   if (outerAdditionalProps) {
     if (isBoolean(outerAdditionalProps)) {
       const recordType = getPropertyNamesRecordType(schemaObj, 'unknown');
@@ -398,12 +379,11 @@ export function getObject({
         dependencies: [],
       };
     }
-    // After isBoolean() guard, outerAdditionalProps is SchemaObject | ReferenceObject (boolean excluded)
-    const nonBoolOuterAdditionalProps = outerAdditionalProps as
-      | NonBooleanSchemaObject
-      | OpenApiReferenceObject;
+    // After isBoolean() guard, outerAdditionalProps is SchemaObject | ReferenceObject
     const resolvedValue = resolveValue({
-      schema: nonBoolOuterAdditionalProps,
+      schema: outerAdditionalProps as
+        | OpenApiSchemaObject
+        | OpenApiReferenceObject,
       name,
       context,
     });

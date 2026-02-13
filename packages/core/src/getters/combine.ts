@@ -6,7 +6,6 @@ import {
   EnumGeneration,
   type GeneratorImport,
   type GeneratorSchema,
-  type NonBooleanSchemaObject,
   type OpenApiReferenceObject,
   type OpenApiSchemaObject,
   type ScalarValue,
@@ -41,7 +40,7 @@ type CombinedData = {
 type Separator = 'allOf' | 'anyOf' | 'oneOf';
 const mergeableAllOfKeys = new Set(['type', 'properties', 'required']);
 
-function isMergeableAllOfObject(schema: NonBooleanSchemaObject): boolean {
+function isMergeableAllOfObject(schema: StrictSchemaObject): boolean {
   // Must have properties to be worth merging
   if (isNullish(schema.properties)) {
     return false;
@@ -61,22 +60,15 @@ function isMergeableAllOfObject(schema: NonBooleanSchemaObject): boolean {
   return Object.keys(schema).every((key) => mergeableAllOfKeys.has(key));
 }
 
-function normalizeAllOfSchema(
-  schema: NonBooleanSchemaObject,
-): NonBooleanSchemaObject {
-  // Bridge assertions: AnyOtherAttribute infects all schema property access
-  const schemaAllOf = schema.allOf as
-    | (OpenApiSchemaObject | OpenApiReferenceObject)[]
-    | undefined;
+function normalizeAllOfSchema(schema: StrictSchemaObject): StrictSchemaObject {
+  const schemaAllOf = schema.allOf;
   if (!schemaAllOf) {
     return schema;
   }
 
   let didMerge = false;
-  const schemaProperties = schema.properties as
-    | Record<string, OpenApiSchemaObject | OpenApiReferenceObject>
-    | undefined;
-  const schemaRequired = schema.required as string[] | undefined;
+  const schemaProperties = schema.properties;
+  const schemaRequired = schema.required;
   const mergedProperties: Record<
     string,
     OpenApiSchemaObject | OpenApiReferenceObject
@@ -85,7 +77,10 @@ function normalizeAllOfSchema(
   const remainingAllOf: (OpenApiSchemaObject | OpenApiReferenceObject)[] = [];
 
   for (const subSchema of schemaAllOf) {
-    if (isSchema(subSchema) && isMergeableAllOfObject(subSchema)) {
+    if (
+      isSchema(subSchema) &&
+      isMergeableAllOfObject(subSchema as StrictSchemaObject)
+    ) {
       didMerge = true;
       if (subSchema.properties) {
         Object.assign(mergedProperties, subSchema.properties);
@@ -113,7 +108,7 @@ function normalizeAllOfSchema(
     }),
     ...(mergedRequired.size > 0 && { required: [...mergedRequired] }),
     ...(remainingAllOf.length > 0 && { allOf: remainingAllOf }),
-  } as NonBooleanSchemaObject;
+  } as StrictSchemaObject;
 }
 
 interface CombineValuesOptions {
@@ -121,7 +116,7 @@ interface CombineValuesOptions {
   resolvedValue?: ScalarValue;
   separator: Separator;
   context: ContextSpec;
-  parentSchema?: NonBooleanSchemaObject;
+  parentSchema?: StrictSchemaObject;
 }
 
 function combineValues({
@@ -156,7 +151,7 @@ function combineValues({
           const disc = s?.discriminator as Discriminator | undefined;
           return disc && resolvedValue.value.includes(` ${disc.propertyName}:`);
         },
-      ) as NonBooleanSchemaObject[];
+      ) as StrictSchemaObject[];
       if (discriminatedPropertySchemas.length > 0) {
         resolvedDataValue = `Omit<${resolvedDataValue}, '${discriminatedPropertySchemas.map((s) => (s.discriminator as Discriminator | undefined)?.propertyName).join("' | '")}'>`;
       }
@@ -175,17 +170,13 @@ function combineValues({
     const overrideRequiredProperties = resolvedData.requiredProperties.filter(
       (prop) =>
         !resolvedData.originalSchema.some((schema) => {
-          const props = schema?.properties as
-            | Record<string, unknown>
-            | undefined;
-          const req = schema?.required as string[] | undefined;
+          const props = schema?.properties;
+          const req = schema?.required;
           return props?.[prop] && req?.includes(prop);
         }) &&
         !((): boolean => {
-          const parentProps = parentSchema?.properties as
-            | Record<string, unknown>
-            | undefined;
-          const parentReq = parentSchema?.required as string[] | undefined;
+          const parentProps = parentSchema?.properties;
+          const parentReq = parentSchema?.required;
           return !!(parentProps?.[prop] && parentReq?.includes(prop));
         })(),
     );
@@ -206,7 +197,7 @@ function combineValues({
         continue;
       }
 
-      const subSchemaProps = subSchema.properties as Record<string, unknown>;
+      const subSchemaProps = subSchema.properties;
       const missingProperties = unique(
         resolvedData.allProperties.filter(
           (p) => !Object.keys(subSchemaProps).includes(p),
@@ -240,7 +231,7 @@ export function combineSchemas({
   formDataContext,
 }: {
   name?: string;
-  schema: NonBooleanSchemaObject;
+  schema: StrictSchemaObject;
   separator: Separator;
   context: ContextSpec;
   nullable: string;
@@ -258,7 +249,7 @@ export function combineSchemas({
     ? normalizeAllOfSchema(schema)
     : schema;
 
-  // Bridge assertions: AnyOtherAttribute infects all schema property access
+  // Dynamic key access: separator is 'allOf' | 'anyOf' | 'oneOf', all declared on StrictSchemaObject
   const items = (normalizedSchema[separator] ?? []) as (
     | OpenApiSchemaObject
     | OpenApiReferenceObject
@@ -282,10 +273,7 @@ export function combineSchemas({
         | undefined,
       context,
     ),
-    requiredProperties:
-      separator === 'allOf'
-        ? ((schema.required as string[] | undefined) ?? [])
-        : [],
+    requiredProperties: separator === 'allOf' ? (schema.required ?? []) : [],
   };
   for (const subSchema of items) {
     // aliasCombinedTypes (v7 compat): create intermediate types like ResponseAnyOf
@@ -335,10 +323,7 @@ export function combineSchemas({
       resolvedData.hasReadonlyProps = true;
     }
 
-    // Bridge: originalSchema.properties is infected by AnyOtherAttribute
-    const originalProps = resolvedValue.originalSchema.properties as
-      | Record<string, unknown>
-      | undefined;
+    const originalProps = resolvedValue.originalSchema?.properties;
     if (resolvedValue.type === 'object' && originalProps) {
       resolvedData.allProperties.push(...Object.keys(originalProps));
     }
@@ -413,7 +398,7 @@ export function combineSchemas({
     resolvedValue = getScalar({
       item: Object.fromEntries(
         Object.entries(normalizedSchema).filter(([key]) => key !== separator),
-      ) as NonBooleanSchemaObject,
+      ) as StrictSchemaObject,
       name,
       context,
       formDataContext,
@@ -426,7 +411,7 @@ export function combineSchemas({
       | (OpenApiSchemaObject | OpenApiReferenceObject)[]
       | undefined;
     resolvedValue = combineSchemas({
-      schema: { [siblingCombiner]: siblingSchemas } as NonBooleanSchemaObject,
+      schema: { [siblingCombiner]: siblingSchemas } as StrictSchemaObject,
       name,
       separator: siblingCombiner,
       context,
