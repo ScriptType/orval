@@ -1314,6 +1314,44 @@ export type OpenApiSchemaObject = OpenAPIV3_1.SchemaObject;
  * so use this type after guarding against boolean schemas.
  */
 export type NonBooleanSchemaObject = Exclude<OpenApiSchemaObject, boolean>;
+
+/**
+ * Strips index signatures from a type, keeping only explicitly declared properties.
+ * Used internally to build StrictSchemaObject — not exported from the package.
+ */
+type OmitIndexSignature<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- {} is the correct pattern for detecting index signatures
+  [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K];
+};
+
+/**
+ * SchemaObject with index signatures removed.
+ * Provides typed property access (.type, .properties, etc.) instead of
+ * the `any` fallback from AnyOtherAttribute's [key: string]: any.
+ * Use getSchemaExtension() to access x-* extension properties.
+ *
+ * Built on NonBooleanSchemaObject (Exclude<SchemaObject, boolean>),
+ * which already excludes boolean schemas.
+ */
+export type StrictSchemaObject = OmitIndexSignature<NonBooleanSchemaObject>;
+
+/**
+ * Type-safe accessor for OpenAPI x-* extension properties on strict schema objects.
+ * Centralizes the cast needed to bypass the stripped index signature.
+ *
+ * @example
+ * const names = getSchemaExtension<string[]>(schema, 'x-enumNames');
+ * const descriptions = getSchemaExtension<string[]>(schema, 'x-enumDescriptions');
+ */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- T is the caller-specified return type generic
+export function getSchemaExtension<T = unknown>(
+  schema: StrictSchemaObject | undefined,
+  key: `x-${string}`,
+): T | undefined {
+  if (!schema) return undefined;
+  return (schema as unknown as Record<string, unknown>)[key] as T | undefined;
+}
+
 export type OpenApiSchemasObject = Record<string, OpenApiSchemaObject>;
 export type OpenApiReferenceObject = OpenAPIV3_1.ReferenceObject & {
   // https://github.com/scalar/scalar/issues/7405
