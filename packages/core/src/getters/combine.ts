@@ -10,7 +10,6 @@ import {
   type OpenApiReferenceObject,
   type OpenApiSchemaObject,
   type ScalarValue,
-  SchemaType,
 } from '../types';
 import { dedupeUnionType, getNumberWord, isSchema, pascal } from '../utils';
 import { getCombinedEnumValue } from './enum';
@@ -393,7 +392,7 @@ export function combineSchemas({
         },
       ],
       isEnum: false,
-      type: 'object' as SchemaType,
+      type: 'object',
       isRef: false,
       hasReadonlyProps: resolvedData.hasReadonlyProps,
       dependencies: resolvedData.dependencies,
@@ -454,7 +453,7 @@ export function combineSchemas({
       ? [...resolvedData.dependencies, ...resolvedValue.dependencies]
       : resolvedData.dependencies,
     isEnum: false,
-    type: 'object' as SchemaType,
+    type: 'object',
     isRef: false,
     hasReadonlyProps:
       resolvedData.hasReadonlyProps ||

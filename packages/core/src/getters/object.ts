@@ -8,7 +8,6 @@ import {
   type OpenApiSchemaObject,
   PropertySortOrder,
   type ScalarValue,
-  SchemaType,
 } from '../types';
 import {
   escape,
@@ -190,7 +189,7 @@ export function getObject({
       schemas: [],
       value: '',
       isEnum: false,
-      type: 'object' as SchemaType,
+      type: 'object',
       isRef: false,
       hasReadonlyProps: false,
       useTypeAlias: false,
