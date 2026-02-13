@@ -323,7 +323,7 @@ export function combineSchemas({
       resolvedData.hasReadonlyProps = true;
     }
 
-    const originalProps = resolvedValue.originalSchema?.properties;
+    const originalProps = resolvedValue.originalSchema.properties;
     if (resolvedValue.type === 'object' && originalProps) {
       resolvedData.allProperties.push(...Object.keys(originalProps));
     }
