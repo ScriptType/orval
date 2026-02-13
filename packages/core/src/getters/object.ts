@@ -112,6 +112,7 @@ export function getObject({
   if (isReference(item)) {
     // isReference() confirms item has $ref; cast to access reference properties
     const ref = item as unknown as OpenApiReferenceObject;
+    // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- $ref is guaranteed by isReference() guard
     const { name } = getRefInfo(ref.$ref as string, context);
     return {
       value: name + nullable,
